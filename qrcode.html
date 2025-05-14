@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de QR Code WhatsApp</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #qrcode-container {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #qrcode-image {
+            max-width: 300px;
+            height: auto;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+            color: green;
+            display: none; /* Inicialmente escondido */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Leitor de QR Code WhatsApp</h1>
+        <p>Escaneie o QR Code abaixo com o seu WhatsApp para conectar:</p>
+        <div id="qrcode-container">
+            <img id="qrcode-image" src="" alt="QR Code do WhatsApp">
+        </div>
+        <div id="message">Conectado com sucesso!</div> </div>
+
+    <script>
+        const qrcodeImage = document.getElementById('qrcode-image');
+        const messageDiv = document.getElementById('message');
+        const qrcodeContainer = document.getElementById('qrcode-container');
+
+        async function buscarQRCode() {
+            try {
+                const response = await fetch('/qrcode'); // Busca o QR Code do servidor
+                if (response.ok) {
+                    const data = await response.json();
+                    qrcodeImage.src = data.qr; // Atualiza o src da imagem com o Data URL
+                } else if (response.status === 404) {
+                    qrcodeImage.src = ''; // Limpa a imagem se não houver QR Code disponível
+                } else {
+                    console.error('Erro ao buscar QR Code:', response.status);
+                }
+            } catch (error) {
+                console.error('Erro na requisição do QR Code:', error);
+            }
+        }
+
+        async function verificarConexao() {
+            try {
+                const response = await fetch('/connected'); // Verifica o status da conexão
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.connected) {
+                        qrcodeContainer.style.display = 'none'; // Esconde o container do QR Code
+                        messageDiv.style.display = 'block';    // Exibe a mensagem de sucesso
+                        clearInterval(intervaloBusca);         // Para de buscar o QR Code
+                    }
+                } else {
+                    console.error('Erro ao verificar conexão:', response.status);
+                }
+            } catch (error) {
+                console.error('Erro na requisição de conexão:', error);
+            }
+        }
+
+        // Busca o QR Code a cada segundo
+        buscarQRCode();
+        const intervaloBusca = setInterval(buscarQRCode, 1000);
+
+        // Verifica a conexão a cada 3 segundos
+        setInterval(verificarConexao, 3000);
+    </script>
+</body>
+</html>
